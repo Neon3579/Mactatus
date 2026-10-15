@@ -39,7 +39,7 @@ struct SystemMenuLabelPreview: View {
 struct SystemPopover: View {
     let store: MetricsStore
     let settings: AppSettings
-    @Environment(\.openSettings) private var openSettings
+    @Environment(\.openAppSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -83,7 +83,6 @@ struct SystemPopover: View {
                 }
                 Spacer()
                 Button("설정…") {
-                    NSApp.activate()
                     openSettings()
                 }
             }

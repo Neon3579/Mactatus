@@ -31,6 +31,7 @@ public final class AppSettings {
         static let systemMenuEnabled = "system.menuEnabled"
         static let systemLabelStyle = "system.labelStyle"
         static let processCount = "system.processCount"
+        static let drawerEnabled = "drawer.enabled"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -53,6 +54,9 @@ public final class AppSettings {
     /// 팝오버에 보여줄 CPU 상위 프로세스 수(0이면 숨김).
     public var processCount: Int { didSet { defaults.set(processCount, forKey: Key.processCount) } }
 
+    /// 메뉴바 서랍(⌄ 버튼)을 쓸지.
+    public var drawerEnabled: Bool { didSet { defaults.set(drawerEnabled, forKey: Key.drawerEnabled) } }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -66,8 +70,10 @@ public final class AppSettings {
             Key.geminiEnabled: true,
             Key.claudeCLIRefresh: true,
             Key.systemMenuEnabled: true,
-            Key.systemLabelStyle: SystemLabelStyle.text.rawValue,
+            // 노치 오른쪽 자리가 좁아 기본은 그래프(약 44pt). 숫자 두 개(text)는 약 116pt
+            Key.systemLabelStyle: SystemLabelStyle.graph.rawValue,
             Key.processCount: 5,
+            Key.drawerEnabled: true,
         ])
         refreshMinutes = defaults.integer(forKey: Key.refreshMinutes)
         alertsEnabled = defaults.bool(forKey: Key.alertsEnabled)
@@ -79,7 +85,8 @@ public final class AppSettings {
         geminiEnabled = defaults.bool(forKey: Key.geminiEnabled)
         claudeCLIRefresh = defaults.bool(forKey: Key.claudeCLIRefresh)
         systemMenuEnabled = defaults.bool(forKey: Key.systemMenuEnabled)
-        systemLabelStyle = SystemLabelStyle(rawValue: defaults.string(forKey: Key.systemLabelStyle) ?? "") ?? .text
+        systemLabelStyle = SystemLabelStyle(rawValue: defaults.string(forKey: Key.systemLabelStyle) ?? "") ?? .graph
         processCount = defaults.integer(forKey: Key.processCount)
+        drawerEnabled = defaults.bool(forKey: Key.drawerEnabled)
     }
 }

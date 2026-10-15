@@ -1,4 +1,5 @@
 import CoreKit
+import DrawerKit
 import MetricsKit
 import SwiftUI
 import UsageKit
@@ -8,12 +9,14 @@ struct SettingsView: View {
     let settings: AppSettings
     let usage: UsageStore
     let metrics: MetricsStore
+    let drawer: DrawerController
     let loginItem: LoginItem
 
     enum Pane: String, CaseIterable, Identifiable {
         case general = "일반"
         case usage = "AI 사용량"
         case system = "시스템 리소스"
+        case drawer = "메뉴바 서랍"
 
         var id: Self { self }
         var symbol: String {
@@ -21,6 +24,7 @@ struct SettingsView: View {
             case .general: "gearshape"
             case .usage: "gauge.with.dots.needle.67percent"
             case .system: "cpu"
+            case .drawer: "chevron.down.square"
             }
         }
     }
@@ -38,6 +42,7 @@ struct SettingsView: View {
             case .general: GeneralPane(loginItem: loginItem)
             case .usage: UsagePane(settings: settings, usage: usage)
             case .system: SystemPane(settings: settings)
+            case .drawer: DrawerPane(settings: settings, drawer: drawer)
             }
         }
         .frame(width: 660, height: 460)
@@ -128,5 +133,38 @@ private struct SystemPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("시스템 리소스")
+    }
+}
+
+private struct DrawerPane: View {
+    @Bindable var settings: AppSettings
+    let drawer: DrawerController
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("메뉴바 서랍(⌄) 쓰기", isOn: $settings.drawerEnabled)
+                Text("⌄ 왼쪽에 있는 아이콘은 서랍에 들어가요. macOS 기본 « 버튼 안에도 함께 보여요(macOS 27에서는 아이콘을 숨길 곳이 « 밖에 없어요).")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("권한") {
+                LabeledContent("손쉬운 사용") {
+                    if drawer.isTrusted {
+                        Label("허용됨", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    } else {
+                        Button("권한 켜기…") { drawer.requestAccessibility() }
+                    }
+                }
+            }
+            Section("쓰는 법") {
+                Text("• 아이콘을 ⌘ 누른 채 ⌄ 왼쪽으로 끌면 서랍에 들어가요.\n• 서랍의 아이콘을 누르면 원래 메뉴가 열려요.\n• 서랍 아이콘을 우클릭 → \"메뉴바로 꺼내기\". 메뉴바에 자리가 없으면 꺼낼 수 없어요.")
+                    .font(.callout)
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("메뉴바 서랍")
+        .onChange(of: settings.drawerEnabled) { _, enabled in
+            enabled ? drawer.start() : drawer.stop()
+        }
     }
 }

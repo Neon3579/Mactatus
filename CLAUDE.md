@@ -36,7 +36,14 @@
 - Swift 6 언어 모드(strict concurrency). 데이터를 가져오는 서비스는 `actor`, 화면용 모델은 `@Observable @MainActor`
 - SwiftUI 우선. 노치 창·서랍·메뉴바 구분자 등 SwiftUI로 안 되는 부분만 AppKit(`NSPanel`, `NSStatusItem`)
 - 에이전트 앱(`LSUIElement`), **App Sandbox 끔**
-- 서명: **Apple Development 인증서 + 1단계에서 정한 번들 ID를 고정**. "Sign to Run Locally"로 바꾸지 말 것 — 빌드마다 손쉬운 사용·화면 기록 권한이 풀린다
+- 서명: `scripts/build.sh`가 유효한 Apple Development 인증서, 없으면 이 맥의 자체 서명 인증서 **"Mactatus 개발 서명"**(코드 서명 "항상 신뢰")으로 서명한다. 번들 ID `app.mactatus.Mactatus` 고정
+  - 임시 서명(ad-hoc)으로 되돌리지 말 것 — 빌드마다 서명값이 바뀌어 손쉬운 사용 권한이 맞지 않게 된다
+  - 자체 서명 인증서는 "항상 신뢰"가 아니면 시스템 설정에서 켜져 있어도 macOS가 권한을 거부한다(AX 오류 -25211)
+  - 한글 인증서 이름으로는 codesign이 실패하므로 지문(SHA-1)으로 지정한다
+  - 앱은 `open build/Mactatus.app`(또는 `scripts/run.sh`)으로 띄운다. 터미널에서 실행 파일을 직접 띄우면 권한 판단이 터미널 쪽 프로세스 기준이 된다
+- 메뉴바 서랍 기록: `~/Library/Logs/Mactatus/drawer.log`(아이콘을 옮기거나 빈 공간을 바꿀 때만 남김)
+- 메뉴바 서랍의 ⌘-끌기(커서가 움직임)는 앱이 켜질 때(Mactatus·다른 앱)·넣기·꺼내기 직후에만 하고, 사용자가 키보드·마우스를 쓰는 중이면 미룬다. 평소에는 ⌄ 왼쪽 빈 공간 폭만 조절한다
+- 메뉴바 아이템은 SwiftUI `MenuBarExtra` 대신 `StatusItemHost`로 직접 만든다(이름·처음 자리를 정해야 ⌄ 오른쪽에 놓을 수 있음). 자세한 이유는 docs/spike-results.md 8·9
 - 외부 의존성은 KeyboardShortcuts, mediaremote-adapter만. 다른 패키지를 추가하려면 먼저 사용자에게 물어본다
 - 성능 목표: 대기 중 CPU 0.5% 미만, 메모리 100MB 미만. 타이머에 tolerance를 주고, 팝오버가 닫혀 있거나 화면이 잠기면 측정을 줄이거나 멈춘다
 

@@ -1,5 +1,6 @@
 import AppKit
 import CoreKit
+import DrawerKit
 import MetricsKit
 import SwiftUI
 import UsageKit
@@ -9,24 +10,9 @@ struct MactatusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var app
 
     var body: some Scene {
-        MenuBarExtra {
-            UsagePopover(store: app.usage)
-        } label: {
-            UsageMenuLabel(store: app.usage)
-        }
-        .menuBarExtraStyle(.window)
-
-        MenuBarExtra(isInserted: Binding(get: { app.settings.systemMenuEnabled },
-                                         set: { app.settings.systemMenuEnabled = $0 })) {
-            SystemPopover(store: app.metrics, settings: app.settings)
-        } label: {
-            SystemMenuLabel(store: app.metrics, settings: app.settings)
-        }
-        .menuBarExtraStyle(.window)
-
-        Settings {
-            SettingsView(settings: app.settings, usage: app.usage, metrics: app.metrics, loginItem: app.loginItem)
-        }
+        // 메뉴바 아이템(AI 사용량·시스템)과 설정 창은 AppDelegate가 직접 만든다(StatusItemHost.swift 참고).
+        // App에는 장면이 하나 있어야 해서 빈 설정 장면만 둔다.
+        Settings { EmptyView() }
     }
 }
 
@@ -35,7 +21,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = AppSettings()
     let loginItem = LoginItem()
     let metrics = MetricsStore()
+    let drawer = DrawerController()
     private var alerts: UsageAlerts?
+    private var usageItem: StatusItemHost?
+    private var systemItem: StatusItemHost?
+
+    private lazy var settingsWindow = SettingsWindow { [unowned self] in
+        AnyView(SettingsView(settings: settings, usage: usage, metrics: metrics, drawer: drawer, loginItem: loginItem))
+    }
 
     lazy var usage: UsageStore = {
         let settings = settings
@@ -66,6 +59,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 try? await Task.sleep(for: .seconds(3))
                 DebugSnapshot.write(UsagePopover(store: usage), to: directory, name: "usage-popover")
                 DebugSnapshot.write(SystemPopover(store: metrics, settings: settings), to: directory, name: "system-popover")
+                DebugSnapshot.write(DrawerSnapshotPreview(trusted: true), to: directory, name: "drawer", width: 320)
+                DebugSnapshot.write(DrawerSnapshotPreview(trusted: false), to: directory, name: "drawer-permission", width: 320)
+                DebugSnapshot.write(DrawerSnapshotPreview(trusted: true, editing: true), to: directory, name: "drawer-editing", width: 320)
                 DebugSnapshot.write(HStack(spacing: 16) {
                     ForEach(SystemLabelStyle.allCases, id: \.self) { style in
                         SystemMenuLabelPreview(store: self.metrics, style: style)
@@ -83,6 +79,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 개발 확인용: 팝오버가 열린 것처럼 1초마다 전부 측정(성능 측정에 씀)
         if CommandLine.arguments.contains("--metrics-detail") { metrics.detailVisible = true }
         metrics.start()
+        drawer.makePanelContent = { [unowned self] in AnyView(DrawerView(controller: drawer)) }
+        drawer.onOwnItemsLeftOfToggle = { [unowned self] in relocateStatusItems() }
+        drawer.onMakeRoom = { [unowned self] remove in
+            if remove {
+                systemItem?.uninstall()
+                usageItem?.uninstall()
+            } else {
+                usageItem?.install(position: Self.itemPosition(order: 1))
+                syncSystemItem()
+            }
+        }
+        if settings.drawerEnabled { drawer.start() }
+        Task { await installStatusItems() }
         // 잠자기에서 깨면 네트워크가 붙을 때까지 잠깐 기다렸다 다시 조회
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in
@@ -91,5 +100,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         Log.app.info("Mactatus 시작")
+    }
+
+    // MARK: - 메뉴바 아이템(AI 사용량·시스템)
+
+    private func openSettings() {
+        usageItem?.closePanel()
+        systemItem?.closePanel()
+        settingsWindow.show()
+    }
+
+    private func installStatusItems() async {
+        let open = OpenAppSettingsAction { [weak self] in self?.openSettings() }
+        usageItem = StatusItemHost(
+            name: "mactatus.usage", title: "AI 사용량",
+            label: { [unowned self] in AnyView(UsageMenuLabel(store: usage)) },
+            content: { [unowned self] in AnyView(UsagePopover(store: usage).environment(\.openAppSettings, open)) })
+        systemItem = StatusItemHost(
+            name: "mactatus.system", title: "시스템 리소스",
+            label: { [unowned self] in AnyView(SystemMenuLabel(store: metrics, settings: settings)) },
+            content: { [unowned self] in AnyView(SystemPopover(store: metrics, settings: settings).environment(\.openAppSettings, open)) })
+        usageItem?.install(position: Self.itemPosition(order: 1))
+        syncSystemItem()
+        observeSystemMenuSetting()
+    }
+
+    /// 처음 놓일 위치값(클수록 왼쪽). macOS 27에서는 실제 x와 비례하지 않는 순서값이라 ⌄ 위치로 계산할 수 없다.
+    /// 437(⌄ 바로 오른쪽을 노린 거리값)은 ⌄ 왼쪽 맨 끝으로 가서 숨었고, 150은 시스템 아이콘들 사이(⌄ 오른쪽)에 놓였다(macOS 27.0.1).
+    /// 그 뒤로는 macOS가 자리를 기억하므로 ⌘-끌기로 옮긴 자리가 유지된다. 시스템이 AI보다 왼쪽.
+    static func itemPosition(order: Int) -> CGFloat { 150 - CGFloat(order) * 2 }
+
+    private func syncSystemItem() {
+        if settings.systemMenuEnabled {
+            systemItem?.install(position: Self.itemPosition(order: 0))
+        } else {
+            systemItem?.uninstall()
+        }
+    }
+
+    private func observeSystemMenuSetting() {
+        withObservationTracking {
+            _ = settings.systemMenuEnabled
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.syncSystemItem()
+                self?.observeSystemMenuSetting()
+            }
+        }
+    }
+
+    /// 서랍이 우리 아이콘을 ⌄ 왼쪽에서 찾았을 때: 새 이름과 ⌄ 오른쪽 위치값으로 다시 만든다.
+    private func relocateStatusItems() {
+        systemItem?.reinstall(position: Self.itemPosition(order: 0))
+        usageItem?.reinstall(position: Self.itemPosition(order: 1))
     }
 }

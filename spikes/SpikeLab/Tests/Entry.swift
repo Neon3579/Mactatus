@@ -22,6 +22,10 @@ public func spikeRun(_ name: UnsafePointer<CChar>, _ logPath: UnsafePointer<CCha
         case "media": await testMedia()
         case "native": await testNative()
         case "press": await testPressApp(extraArg)
+        case "clickat": await testClickAt(extraArg)
+        case "region": await testCaptureRegion(extraArg)
+        case "reverify": await testReverify()
+        case "reverify2": await testReverify2()
         default: log("알 수 없는 테스트: \(test)")
         }
         log("끝")

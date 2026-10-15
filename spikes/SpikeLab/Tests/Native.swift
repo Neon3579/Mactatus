@@ -50,6 +50,9 @@ func pressAndCapture(_ el: AXUIElement, name: String, height: CGFloat = 420) asy
             let w = NSScreen.screens.first?.frame.width ?? 1470
             await capture(CGRect(x: w - 760, y: 0, width: 760, height: 760), name: "press_\(bundleID)")
             await capture(CGRect(x: 0, y: 0, width: w, height: 760), name: "press_\(bundleID)_full")
+            postKey(0x35) // Esc로 닫기
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            out.append("Esc 보냄")
         }
         return out
     }.value
@@ -86,3 +89,26 @@ func pressAndCapture(_ el: AXUIElement, name: String, height: CGFloat = 420) asy
     }.value
     lines.forEach(log)
 }
+
+
+/// 개발 확인용: 화면 좌표(x,y)를 한 번 클릭하고 위쪽 화면을 캡처한 뒤 Esc.
+@MainActor func testClickAt(_ arg: String) async {
+    let parts = arg.split(separator: ",").compactMap { Double($0) }
+    guard parts.count == 2 else { log("인자 형식: x,y"); return }
+    let cursor0 = cursorCG()
+    await synthClick(at: CGPoint(x: parts[0], y: parts[1]))
+    await wait(1.5)
+    await capture(CGRect(x: 0, y: 0, width: NSScreen.screens.first?.frame.width ?? 1470, height: 620), name: "clickat")
+    postKey(0x35)
+    await wait(0.4)
+    CGWarpMouseCursorPosition(cursor0)
+    log("클릭·캡처 완료")
+}
+
+/// 개발 확인용: 화면 영역(x,y,w,h)만 캡처한다(클릭 없음).
+@MainActor func testCaptureRegion(_ arg: String) async {
+    let p = arg.split(separator: ",").compactMap { Double($0) }
+    guard p.count == 4 else { log("인자 형식: x,y,w,h"); return }
+    await capture(CGRect(x: p[0], y: p[1], width: p[2], height: p[3]), name: "region")
+}
+

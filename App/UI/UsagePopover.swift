@@ -32,7 +32,7 @@ struct UsageMenuLabel: View {
 /// 메뉴바 아이콘을 누르면 열리는 창.
 struct UsagePopover: View {
     let store: UsageStore
-    @Environment(\.openSettings) private var openSettings
+    @Environment(\.openAppSettings) private var openSettings
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -89,7 +89,6 @@ struct UsagePopover: View {
     private var footer: some View {
         HStack {
             Button("설정…") {
-                NSApp.activate()
                 openSettings()
             }
             Spacer()

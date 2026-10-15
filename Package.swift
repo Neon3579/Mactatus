@@ -23,10 +23,19 @@ let package = Package(
             name: "MetricsKit",
             path: "Packages/MetricsKit/Sources/MetricsKit"
         ),
+        .target(
+            name: "DrawerKit",
+            path: "Packages/DrawerKit/Sources/DrawerKit"
+        ),
         .executableTarget(
             name: "Mactatus",
-            dependencies: ["CoreKit", "UsageKit", "MetricsKit"],
+            dependencies: ["CoreKit", "UsageKit", "MetricsKit", "DrawerKit"],
             path: "App"
+        ),
+        .testTarget(
+            name: "DrawerKitTests",
+            dependencies: ["DrawerKit"],
+            path: "Packages/DrawerKit/Tests/DrawerKitTests"
         ),
         .testTarget(
             name: "MetricsKitTests",
