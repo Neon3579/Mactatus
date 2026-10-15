@@ -6,9 +6,9 @@
 
 | 영역 | 위치 | 패키지 |
 |---|---|---|
-| ① AI 사용량(Claude Code·Codex·Gemini) | 메뉴바 아이콘 + 팝오버 | `UsageKit` |
+| ① AI 사용량(Claude Code·Codex·Gemini, 안 되면 Antigravity) | 메뉴바 아이콘 + 팝오버 | `UsageKit` |
 | ② 시스템 리소스 | 메뉴바 아이콘 + 팝오버(①과 별도 아이콘) | `MetricsKit` |
-| ③ 메뉴바 서랍(Windows 숨겨진 아이콘 방식, 편집 모드 포함) | 메뉴바 ⌃ + 서랍 패널 | `DrawerKit` |
+| ③ 메뉴바 서랍(Windows 숨겨진 아이콘 방식, 편집 모드 포함. macOS 기본 « 버튼은 그대로 둠) | 메뉴바 ⌄ + 서랍 패널 | `DrawerKit` |
 | ④ 노치 허브(음악·블루투스·다운로드·파일 트레이·상태 팝업·스크린샷·클립보드) | 내장 디스플레이 노치 | `NotchKit`, `Modules` |
 
 폴더 구조는 PLAN.md 5장을 따른다. Xcode 프로젝트는 1단계에서 만든다.
@@ -49,7 +49,7 @@
 
 ## 보안·개인정보
 
-- Claude·Codex·Gemini 토큰은 메모리에서만 쓴다. 로그·디스크·에러 메시지에 남기지 않고, 해당 서비스의 공식 도메인으로만 보낸다
+- Claude·Codex·Gemini·Antigravity 토큰은 메모리에서만 쓴다. 로그·디스크·에러 메시지에 남기지 않고, 해당 서비스의 공식 도메인으로만 보낸다
 - 사용자의 `~/.claude`, `~/.codex`, `~/.gemini`는 **읽기만** 한다. 절대 수정하지 않는다
 - 클립보드 기록은 이 맥에만 저장하고, `ConcealedType`·`TransientType` 항목(비밀번호 관리자 등)은 저장하지 않는다
 - 텔레메트리·외부 전송 없음
