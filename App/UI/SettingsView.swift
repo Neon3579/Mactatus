@@ -10,6 +10,7 @@ struct SettingsView: View {
     let usage: UsageStore
     let metrics: MetricsStore
     let drawer: DrawerController
+    let notch: NotchHub
     let loginItem: LoginItem
 
     enum Pane: String, CaseIterable, Identifiable {
@@ -17,6 +18,7 @@ struct SettingsView: View {
         case usage = "AI 사용량"
         case system = "시스템 리소스"
         case drawer = "메뉴바 서랍"
+        case notch = "노치 허브"
 
         var id: Self { self }
         var symbol: String {
@@ -25,6 +27,7 @@ struct SettingsView: View {
             case .usage: "gauge.with.dots.needle.67percent"
             case .system: "cpu"
             case .drawer: "chevron.down.square"
+            case .notch: "rectangle.topthird.inset.filled"
             }
         }
     }
@@ -43,6 +46,7 @@ struct SettingsView: View {
             case .usage: UsagePane(settings: settings, usage: usage)
             case .system: SystemPane(settings: settings)
             case .drawer: DrawerPane(settings: settings, drawer: drawer)
+            case .notch: NotchPane(settings: settings, notch: notch)
             }
         }
         .frame(width: 660, height: 460)
@@ -133,6 +137,33 @@ private struct SystemPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("시스템 리소스")
+    }
+}
+
+private struct NotchPane: View {
+    @Bindable var settings: AppSettings
+    let notch: NotchHub
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("노치 허브 쓰기", isOn: $settings.notchEnabled)
+                Text("내장 디스플레이의 노치 둘레에 보여요. 노치에 마우스를 올리면 펼쳐져요. 외장 모니터에는 띄우지 않아요.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("모듈") {
+                Toggle("음악", isOn: $settings.mediaEnabled)
+                    .disabled(!settings.notchEnabled)
+                if !notch.media.isAvailable {
+                    Label("음악 정보를 읽는 mediaremote-adapter가 앱 안에 없어요.", systemImage: "exclamationmark.triangle")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("노치 허브")
+        .onChange(of: settings.notchEnabled) { notch.apply() }
+        .onChange(of: settings.mediaEnabled) { notch.apply() }
     }
 }
 

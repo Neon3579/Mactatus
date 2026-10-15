@@ -32,6 +32,8 @@ public final class AppSettings {
         static let systemLabelStyle = "system.labelStyle"
         static let processCount = "system.processCount"
         static let drawerEnabled = "drawer.enabled"
+        static let notchEnabled = "notch.enabled"
+        static let mediaEnabled = "notch.media.enabled"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -57,6 +59,11 @@ public final class AppSettings {
     /// 메뉴바 서랍(⌄ 버튼)을 쓸지.
     public var drawerEnabled: Bool { didSet { defaults.set(drawerEnabled, forKey: Key.drawerEnabled) } }
 
+    /// 노치 허브를 쓸지(내장 디스플레이에만 뜬다).
+    public var notchEnabled: Bool { didSet { defaults.set(notchEnabled, forKey: Key.notchEnabled) } }
+    /// 노치에 지금 재생 중인 음악을 보일지.
+    public var mediaEnabled: Bool { didSet { defaults.set(mediaEnabled, forKey: Key.mediaEnabled) } }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -74,6 +81,8 @@ public final class AppSettings {
             Key.systemLabelStyle: SystemLabelStyle.graph.rawValue,
             Key.processCount: 5,
             Key.drawerEnabled: true,
+            Key.notchEnabled: true,
+            Key.mediaEnabled: true,
         ])
         refreshMinutes = defaults.integer(forKey: Key.refreshMinutes)
         alertsEnabled = defaults.bool(forKey: Key.alertsEnabled)
@@ -88,5 +97,7 @@ public final class AppSettings {
         systemLabelStyle = SystemLabelStyle(rawValue: defaults.string(forKey: Key.systemLabelStyle) ?? "") ?? .graph
         processCount = defaults.integer(forKey: Key.processCount)
         drawerEnabled = defaults.bool(forKey: Key.drawerEnabled)
+        notchEnabled = defaults.bool(forKey: Key.notchEnabled)
+        mediaEnabled = defaults.bool(forKey: Key.mediaEnabled)
     }
 }

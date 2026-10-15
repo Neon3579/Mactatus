@@ -2,6 +2,8 @@ import AppKit
 import CoreKit
 import DrawerKit
 import MetricsKit
+import Modules
+import NotchKit
 import SwiftUI
 import UsageKit
 
@@ -23,11 +25,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let metrics = MetricsStore()
     let drawer = DrawerController()
     private var alerts: UsageAlerts?
+    private lazy var notch = NotchHub(settings: settings)
     private var usageItem: StatusItemHost?
+    private var terminationSignal: DispatchSourceSignal?
     private var systemItem: StatusItemHost?
 
     private lazy var settingsWindow = SettingsWindow { [unowned self] in
-        AnyView(SettingsView(settings: settings, usage: usage, metrics: metrics, drawer: drawer, loginItem: loginItem))
+        AnyView(SettingsView(settings: settings, usage: usage, metrics: metrics, drawer: drawer, notch: notch, loginItem: loginItem))
     }
 
     lazy var usage: UsageStore = {
@@ -48,7 +52,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             interval: { TimeInterval(max(settings.refreshMinutes, 1) * 60) })
     }()
 
+    func applicationWillTerminate(_ notification: Notification) {
+        MediaAdapter.terminateRunning()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // pkill 등으로 끝낼 때(SIGTERM)도 정상 종료 과정을 거쳐 음악 어댑터(perl)를 같이 끈다
+        signal(SIGTERM, SIG_IGN)
+        let termination = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        termination.setEventHandler { MainActor.assumeIsolated { NSApp.terminate(nil) } }
+        termination.resume()
+        terminationSignal = termination
         // Info.plist의 LSUIElement가 없을 때(swift run)도 Dock에 안 뜨게
         NSApp.setActivationPolicy(.accessory)
         if let directory = DebugSnapshot.outputDirectory {
@@ -62,6 +76,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 DebugSnapshot.write(DrawerSnapshotPreview(trusted: true), to: directory, name: "drawer", width: 320)
                 DebugSnapshot.write(DrawerSnapshotPreview(trusted: false), to: directory, name: "drawer-permission", width: 320)
                 DebugSnapshot.write(DrawerSnapshotPreview(trusted: true, editing: true), to: directory, name: "drawer-editing", width: 320)
+                let song = NowPlaying(bundleID: "com.apple.Music", title: "Snapshot Song", artist: "Mactatus", album: "Preview",
+                                      isPlaying: true, duration: 214, elapsed: 75, timestamp: .now, playbackRate: 1)
+                for (name, expanded, playing) in [("notch-compact", false, song as NowPlaying?), ("notch-expanded", true, song), ("notch-empty", true, nil)] {
+                    let media = MediaModule(paths: nil)
+                    media.showPreview(playing)
+                    let notch = NotchController()
+                    notch.modules = [media]
+                    DebugSnapshot.write(notch.previewView(expanded: expanded), to: directory, name: name, width: 548)
+                }
                 DebugSnapshot.write(HStack(spacing: 16) {
                     ForEach(SystemLabelStyle.allCases, id: \.self) { style in
                         SystemMenuLabelPreview(store: self.metrics, style: style)
@@ -92,6 +115,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if settings.drawerEnabled { drawer.start() }
         Task { await installStatusItems() }
+        notch.controller.onOpenSettings = { [unowned self] in openSettings() }
+        notch.apply()
         // 잠자기에서 깨면 네트워크가 붙을 때까지 잠깐 기다렸다 다시 조회
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in

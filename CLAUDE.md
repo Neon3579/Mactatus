@@ -25,7 +25,8 @@
 - `swift test` — 파서 테스트(`Packages/UsageKit/Tests`)
 - `scripts/build.sh [debug|release]` — `build/Mactatus.app`으로 묶고 서명(Apple Development 인증서가 없으면 임시 서명)
 - `scripts/run.sh` — release로 빌드한 뒤 실행 중인 앱을 끄고 새로 띄움(`scripts/run.sh debug`로 디버그 빌드)
-- `build/Mactatus.app/Contents/MacOS/Mactatus --snapshot <폴더>` — 한 번 조회한 뒤 AI 사용량·시스템 팝오버와 메뉴바 라벨을 라이트·다크 PNG로 저장하고 종료. 메뉴바를 열지 않고 화면을 확인할 때 쓴다
+- `build/Mactatus.app/Contents/MacOS/Mactatus --snapshot <폴더>` — 한 번 조회한 뒤 AI 사용량·시스템 팝오버, 메뉴바 라벨, 서랍, 노치(미니·펼침·빈 상태)를 라이트·다크 PNG로 저장하고 종료. 메뉴바·노치를 열지 않고 화면을 확인할 때 쓴다
+- `scripts/build-mediaremote.sh` — `Vendor/mediaremote-adapter`를 clang으로 빌드(`scripts/build.sh`가 부름). 소스가 없으면 음악 모듈이 "읽을 수 없음"으로 뜬다
 - `build/Mactatus.app/Contents/MacOS/Mactatus --metrics-detail` — 팝오버가 열린 것처럼 1초마다 전부 측정. 성능 확인용: 12초 뒤부터 60초 동안 `ps -o time= -p <pid>` 차이로 CPU 사용률을 잰다(목표 1% 미만)
 - 성능 문제를 찾을 때는 `sample <pid> 20 -file <파일>`로 프로파일을 떠서 무거운 함수를 확인한다
 - `UsageKit`의 파서는 단위 테스트 필수. 실제 응답·로그에서 만든 샘플을 테스트 데이터로 쓰되, 토큰·이메일 등 개인 정보는 지운다

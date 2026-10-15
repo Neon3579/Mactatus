@@ -27,15 +27,34 @@ let package = Package(
             name: "DrawerKit",
             path: "Packages/DrawerKit/Sources/DrawerKit"
         ),
+        .target(
+            name: "NotchKit",
+            path: "Packages/NotchKit/Sources/NotchKit"
+        ),
+        .target(
+            name: "Modules",
+            dependencies: ["CoreKit", "NotchKit"],
+            path: "Packages/Modules/Sources/Modules"
+        ),
         .executableTarget(
             name: "Mactatus",
-            dependencies: ["CoreKit", "UsageKit", "MetricsKit", "DrawerKit"],
+            dependencies: ["CoreKit", "UsageKit", "MetricsKit", "DrawerKit", "NotchKit", "Modules"],
             path: "App"
         ),
         .testTarget(
             name: "DrawerKitTests",
             dependencies: ["DrawerKit"],
             path: "Packages/DrawerKit/Tests/DrawerKitTests"
+        ),
+        .testTarget(
+            name: "NotchKitTests",
+            dependencies: ["NotchKit"],
+            path: "Packages/NotchKit/Tests/NotchKitTests"
+        ),
+        .testTarget(
+            name: "ModulesTests",
+            dependencies: ["Modules"],
+            path: "Packages/Modules/Tests/ModulesTests"
         ),
         .testTarget(
             name: "MetricsKitTests",

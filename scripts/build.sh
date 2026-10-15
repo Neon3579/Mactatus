@@ -23,6 +23,14 @@ for bundle in "$BIN_DIR"/*.bundle(N); do
   cp -R "$bundle" "$APP/Contents/Resources/"
 done
 
+# 음악 정보(mediaremote-adapter): 소스가 있으면 프레임워크를 빌드해 넣는다. 없으면 음악 모듈이 "읽을 수 없음"으로 뜬다
+if [[ -d Vendor/mediaremote-adapter ]]; then
+  scripts/build-mediaremote.sh
+  mkdir -p "$APP/Contents/Frameworks"
+  cp -R build/vendor/MediaRemoteAdapter.framework "$APP/Contents/Frameworks/"
+  cp Vendor/mediaremote-adapter/bin/mediaremote-adapter.pl "$APP/Contents/Resources/"
+fi
+
 # 서명 인증서 고르기: 환경 변수 → 유효한 Apple Development → 자체 서명 "Mactatus 개발 서명"
 IDENTITY=${MACTATUS_SIGN_IDENTITY:-}
 if [[ -z "$IDENTITY" ]]; then
@@ -32,6 +40,10 @@ if [[ -z "$IDENTITY" ]]; then
   # 한글 이름으로는 codesign이 인증서를 못 찾아("unknown exception") 지문(SHA-1)으로 지정한다
   IDENTITY=$(security find-identity -p codesigning | awk '/"Mactatus 개발 서명"/ { print $2; exit }')
 fi
+# 안쪽 프레임워크부터 같은 인증서로 서명한다
+for framework in "$APP"/Contents/Frameworks/*.framework(N); do
+  codesign --force --sign "${IDENTITY:--}" "$framework"
+done
 if [[ -n "$IDENTITY" ]]; then
   codesign --force --sign "$IDENTITY" "$APP"
   echo "서명: $(codesign -dvv "$APP" 2>&1 | awk -F= '/^Authority=/ { print $2; exit }')"

@@ -88,6 +88,12 @@
   - `send 2`(재생/일시정지 전환) 정상
   - 앨범 아트는 이번엔 비어 있었음 → 1단계 이후 `stream`으로 재확인
 
+**4단계에서 확인한 것(2026-10-16, macOS 27.0.1)**
+- `Vendor/mediaremote-adapter`(v0.7.7)를 clang으로 빌드해 `Contents/Frameworks`에 넣고 앱 인증서로 서명 → `/usr/bin/perl … stream --micros`로 Apple Music 재생 정보(앨범아트 포함) 수신
+- `src/adapter/test.m`은 테스트 클라이언트 헤더가 필요해 빌드에서 뺌(`test` 명령만 못 씀)
+- perl은 부모(앱)가 죽어도 다음 재생 정보가 바뀔 때까지 남는다 → 앱 종료(SIGTERM 포함) 때 직접 끄고, 시작할 때 남은 것을 정리
+- 이퀄라이저를 SwiftUI `TimelineView`로 초당 20번 그리면 앱 CPU 약 9% → Core Animation 반복 애니메이션으로 바꾸니 안정 상태 약 0.85%(서랍·시스템 측정 포함)
+
 ## 5. 노치 패널 — 가능(우회 필요)
 
 - 노치 위치: x 645.5, 폭 179, 높이 32pt / 메뉴바 높이 33pt(`auxiliaryTopLeftArea`·`auxiliaryTopRightArea`로 계산)
