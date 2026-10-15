@@ -11,7 +11,7 @@
 | ③ 메뉴바 서랍(Windows 숨겨진 아이콘 방식, 편집 모드 포함. macOS 기본 « 버튼은 그대로 둠) | 메뉴바 ⌄ + 서랍 패널 | `DrawerKit` |
 | ④ 노치 허브(음악·블루투스·다운로드·파일 트레이·상태 팝업·스크린샷·클립보드) | 내장 디스플레이 노치 | `NotchKit`, `Modules` |
 
-폴더 구조는 PLAN.md 5장을 따른다. Xcode 프로젝트는 1단계에서 만든다.
+폴더 구조는 PLAN.md 5장을 따른다. Xcode 프로젝트 대신 루트의 `Package.swift` 하나로 빌드한다(Xcode에서 열 수 있음).
 
 ## 환경
 
@@ -21,7 +21,13 @@
 
 ## 빌드·테스트
 
-- Xcode 프로젝트를 만든 뒤 이 섹션에 실제 빌드·테스트 명령을 적을 것
+- `swift build` — 컴파일만 확인
+- `swift test` — 파서 테스트(`Packages/UsageKit/Tests`)
+- `scripts/build.sh [debug|release]` — `build/Mactatus.app`으로 묶고 서명(Apple Development 인증서가 없으면 임시 서명)
+- `scripts/run.sh` — release로 빌드한 뒤 실행 중인 앱을 끄고 새로 띄움(`scripts/run.sh debug`로 디버그 빌드)
+- `build/Mactatus.app/Contents/MacOS/Mactatus --snapshot <폴더>` — 한 번 조회한 뒤 AI 사용량·시스템 팝오버와 메뉴바 라벨을 라이트·다크 PNG로 저장하고 종료. 메뉴바를 열지 않고 화면을 확인할 때 쓴다
+- `build/Mactatus.app/Contents/MacOS/Mactatus --metrics-detail` — 팝오버가 열린 것처럼 1초마다 전부 측정. 성능 확인용: 12초 뒤부터 60초 동안 `ps -o time= -p <pid>` 차이로 CPU 사용률을 잰다(목표 1% 미만)
+- 성능 문제를 찾을 때는 `sample <pid> 20 -file <파일>`로 프로파일을 떠서 무거운 함수를 확인한다
 - `UsageKit`의 파서는 단위 테스트 필수. 실제 응답·로그에서 만든 샘플을 테스트 데이터로 쓰되, 토큰·이메일 등 개인 정보는 지운다
 - UI를 바꾼 뒤에는 앱을 실행해서 직접 확인한다. 권한 허용처럼 사용자가 해야 하는 단계는 사용자에게 요청한다
 

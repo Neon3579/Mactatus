@@ -35,6 +35,27 @@ func pressAndCapture(_ el: AXUIElement, name: String, height: CGFloat = 420) asy
     return "AXPress=\(err == .success ? "성공" : "AXError \(err.rawValue)") | MenuBarAgent 창: \(windows)"
 }
 
+/// 지정한 앱(번들 ID)의 메뉴바 아이콘 위치를 보고, 눌러서 열린 창을 캡처한다. Mactatus 확인용.
+@MainActor func testPressApp(_ bundleID: String) async {
+    guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else {
+        log("\(bundleID) 실행 중 아님"); return
+    }
+    let lines = await Task.detached { () -> [String] in
+        let items = extrasItems(pid: app.processIdentifier)
+        var out = ["메뉴바 아이템 \(items.count)개: \(items.map { "\(axLabel($0)) \(fmt(axFrame($0)))" })"]
+        if let item = items.first {
+            let err = AXUIElementPerformAction(item, kAXPressAction as CFString)
+            out.append("AXPress → \(err == .success ? "성공" : "AXError \(err.rawValue)")")
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            let w = NSScreen.screens.first?.frame.width ?? 1470
+            await capture(CGRect(x: w - 760, y: 0, width: 760, height: 760), name: "press_\(bundleID)")
+            await capture(CGRect(x: 0, y: 0, width: w, height: 760), name: "press_\(bundleID)_full")
+        }
+        return out
+    }.value
+    lines.forEach(log)
+}
+
 @MainActor func testNative() async {
     let lines = await Task.detached { () -> [String] in
         var out: [String] = []

@@ -21,6 +21,7 @@ public func spikeRun(_ name: UnsafePointer<CChar>, _ logPath: UnsafePointer<CCha
         case "bt": await testBluetooth(seconds: Double(extraArg) ?? 60)
         case "media": await testMedia()
         case "native": await testNative()
+        case "press": await testPressApp(extraArg)
         default: log("알 수 없는 테스트: \(test)")
         }
         log("끝")

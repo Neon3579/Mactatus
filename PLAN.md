@@ -120,10 +120,16 @@
 **메뉴바 표시 방식(사용자 선택)**
 - 텍스트(`CPU 12% · MEM 61%`) / 작은 그래프 / 아이콘만
 
-**측정 주기**
-- 팝오버 열림: 1초 / 닫힘: 5초(메뉴바 표시용)
-- 화면 잠금·저전력 모드: 측정 중지
+**측정 주기** (2단계에서 실측으로 조정)
+- 팝오버 열림: CPU·메모리·GPU·네트워크 1초, 디스크 속도·상위 프로세스 2초, 배터리 10초, 온도 10초, 디스크 남은 용량 2분
+- 팝오버 닫힘: CPU·메모리만 5초(저전력 모드 10초)
+- 메뉴바 라벨은 팝오버가 열려 있어도 5초에 한 번만 다시 그림(라벨을 다시 그리는 비용이 큼)
+- 화면이 잠기거나 꺼지면 측정 중지
 - 팝오버 하단에 "활성 상태 보기 열기" 버튼
+
+**2단계 실측(release, M2)**: 팝오버 열림 상당 CPU 0.66% · 닫힘 0.15%, 메모리 약 80~90MB
+- 무거웠던 것: 온도 센서(1개 1ms 이상 → 16개 중 4개만 10초마다), 디스크 남은 용량(정리 가능 공간 계산 → 2분마다), `if_indextoname`(부를 때마다 전체 목록 생성 → 번호·이름 표 캐시)
+- 상위 프로세스는 내 계정 프로세스만 보임(WindowServer 같은 시스템 계정 프로세스는 권한이 없어 빠짐)
 
 ### 4.3 메뉴바 ③ 메뉴바 서랍
 
@@ -284,16 +290,18 @@ iPhone 홈 화면처럼 메뉴바 전체를 편집 상태로 바꿔서, ⌘ 없�
 
 ```
 Mactatus/
-├─ App/              @main, AppDelegate, 권한 안내 화면, 로그인 시 자동 실행
-├─ Packages/ (로컬 SPM)
-│  ├─ CoreKit/       설정, os.Logger, 주기 실행 스케줄러, 이벤트 버스
-│  ├─ UsageKit/      Claude · Codex · Gemini(→ Antigravity) 사용량 조회
-│  ├─ MetricsKit/    CPU · Memory · GPU · Disk · Network · Battery · Sensors
-│  ├─ DrawerKit/     구분자, 메뉴바 아이콘 목록·캡처, 아이콘 이동·클릭 전달, 끌기 처리, 편집 모드
-│  ├─ NotchKit/      노치 패널, 크기 계산, 상태 흐름, 우선순위 큐, 애니메이션
-│  └─ Modules/       Media · Bluetooth · Downloads · FileTray · HUD · Screenshot · Clipboard
-├─ UI/               메뉴바 팝오버, 서랍 패널, 노치 뷰, 설정 창
-└─ Tests/            파서 단위 테스트(실제 JSONL·API 응답 샘플 사용)
+├─ Package.swift     Swift 패키지 하나로 빌드(Xcode에서 이 파일을 열 수 있음). 모듈은 Packages/ 아래 타깃
+├─ App/              @main, AppDelegate, UI/(메뉴바 팝오버·설정 창), Services/(알림·로그인 항목)
+├─ Packages/
+│  ├─ CoreKit/       설정, os.Logger, 외부 명령 실행
+│  ├─ UsageKit/      Claude · Codex · Gemini(→ Antigravity) 사용량 조회 + Tests/(실제 응답 샘플로 파서 테스트)
+│  ├─ MetricsKit/    CPU · Memory · GPU · Disk · Network · Battery · Sensors (2단계)
+│  ├─ DrawerKit/     구분자, 메뉴바 아이콘 목록·캡처, 아이콘 이동·클릭 전달, 끌기 처리, 편집 모드 (3단계)
+│  ├─ NotchKit/      노치 패널, 크기 계산, 상태 흐름, 우선순위 큐, 애니메이션 (4단계)
+│  └─ Modules/       Media · Bluetooth · Downloads · FileTray · HUD · Screenshot · Clipboard (4~6단계)
+├─ Support/          Info.plist
+├─ scripts/          build.sh(.app 묶기·서명), run.sh(빌드 후 실행)
+└─ docs/, spikes/    검증 결과와 검증 코드
 ```
 
 **동시성**
@@ -330,8 +338,8 @@ Mactatus/
 | 단계 | 기간 | 할 일 | 완료 기준 |
 |---|---|---|---|
 | **0. 기술 검증** ✅ | 4~5일 | 아래 "0단계 검증 목록" 전부 확인 | 항목별 "가능 / 우회 필요 / 불가능" 판정표 → [docs/spike-results.md](docs/spike-results.md) |
-| 1. 앱 뼈대 + AI 사용량 | 1주 | 앱 기본 구조, 개발용 서명 고정, 설정, ① 메뉴바 | 세 서비스 카드와 알림 동작 |
-| 2. 시스템 리소스 | 1주 | ② 메뉴바 | 1초마다 갱신해도 CPU 1% 미만 |
+| 1. 앱 뼈대 + AI 사용량 ✅ | 1주 | 앱 기본 구조, 개발용 서명 고정, 설정, ① 메뉴바 | 세 서비스 카드와 알림 동작 (서명 인증서는 사용자 준비 필요) |
+| 2. 시스템 리소스 ✅ | 1주 | ② 메뉴바 | 1초마다 갱신해도 CPU 1% 미만 (실측 0.66%) |
 | 3. 메뉴바 서랍 | 2.5~3주 | 시작 전 아이콘 이동(⌘ 끌기)·« 버튼 관계 재검증, ③ 서랍 패널, 끌어서 넣기·빼기, 편집 모드, 접기 모드 | 넣기·빼기·편집 결과가 재시동 후에도 유지 |
 | 4. 노치 엔진 + 음악 | 2주 | 노치 엔진, 음악 모듈 | Music·Spotify·브라우저 재생 제어 |
 | 5. 이벤트 알림 모듈 | 1주 | 블루투스, 상태 팝업, 다운로드 | 이벤트가 겹쳐도 우선순위대로 표시 |
