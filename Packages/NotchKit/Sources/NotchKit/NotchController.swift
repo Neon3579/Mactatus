@@ -36,6 +36,7 @@ public final class NotchController {
     @ObservationIgnored private var hoverTask: Task<Void, Never>?
     @ObservationIgnored private var collapseTask: Task<Void, Never>?
     @ObservationIgnored private var mouseInside = false
+    @ObservationIgnored private var trackTask: Task<Void, Never>?
 
     public init() {}
 
@@ -192,6 +193,7 @@ public final class NotchController {
         guard inside != mouseInside else { return }
         mouseInside = inside
         if inside {
+            startTracking()
             collapseTask?.cancel()
             guard !isExpanded else { return }
             let delay = hoverDelay
@@ -208,6 +210,22 @@ public final class NotchController {
                 guard !Task.isCancelled, let self, !self.mouseInside else { return }
                 self.collapse()
             }
+        }
+    }
+
+    /// 마우스가 모양 위에 있거나 펼쳐져 있는 동안 위치를 직접 확인한다.
+    /// 노치 창은 키 창이 되지 않아서, 창 안(모양 밖의 투명한 곳, 예: 노치 옆 메뉴바 아이콘 위)에서 움직이면
+    /// 이동 알림이 오지 않는다. 그러면 클릭 통과로 돌아가지 못해 그 아래 메뉴바 아이콘(서랍 ⌄ 등)을 누를 수 없었다.
+    private func startTracking() {
+        guard trackTask == nil else { return }
+        trackTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(50))
+                guard let self else { return }
+                self.updateMouse()
+                if !self.mouseInside && !self.isExpanded { break }
+            }
+            self?.trackTask = nil
         }
     }
 }

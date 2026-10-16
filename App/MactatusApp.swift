@@ -75,7 +75,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 DebugSnapshot.write(SystemPopover(store: metrics, settings: settings), to: directory, name: "system-popover")
                 DebugSnapshot.write(DrawerSnapshotPreview(trusted: true), to: directory, name: "drawer", width: 320)
                 DebugSnapshot.write(DrawerSnapshotPreview(trusted: false), to: directory, name: "drawer-permission", width: 320)
-                DebugSnapshot.write(DrawerSnapshotPreview(trusted: true, editing: true), to: directory, name: "drawer-editing", width: 320)
                 let song = NowPlaying(bundleID: "com.apple.Music", title: "Snapshot Song", artist: "Mactatus", album: "Preview",
                                       isPlaying: true, duration: 214, elapsed: 75, timestamp: .now, playbackRate: 1)
                 for (name, expanded, playing) in [("notch-compact", false, song as NowPlaying?), ("notch-expanded", true, song), ("notch-empty", true, nil)] {
@@ -103,16 +102,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if CommandLine.arguments.contains("--metrics-detail") { metrics.detailVisible = true }
         metrics.start()
         drawer.makePanelContent = { [unowned self] in AnyView(DrawerView(controller: drawer)) }
-        drawer.onOwnItemsLeftOfToggle = { [unowned self] in relocateStatusItems() }
-        drawer.onMakeRoom = { [unowned self] remove in
-            if remove {
-                systemItem?.uninstall()
-                usageItem?.uninstall()
-            } else {
-                usageItem?.install(position: Self.itemPosition(order: 1))
-                syncSystemItem()
-            }
-        }
         if settings.drawerEnabled { drawer.start() }
         Task { await installStatusItems() }
         notch.controller.onOpenSettings = { [unowned self] in openSettings() }
@@ -172,11 +161,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.observeSystemMenuSetting()
             }
         }
-    }
-
-    /// 서랍이 우리 아이콘을 ⌄ 왼쪽에서 찾았을 때: 새 이름과 ⌄ 오른쪽 위치값으로 다시 만든다.
-    private func relocateStatusItems() {
-        systemItem?.reinstall(position: Self.itemPosition(order: 0))
-        usageItem?.reinstall(position: Self.itemPosition(order: 1))
     }
 }

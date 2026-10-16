@@ -83,16 +83,6 @@ final class StatusItemHost: NSObject {
         labelView = nil
     }
 
-    /// 새 이름과 위치값으로 다시 만든다(⌄ 왼쪽에 숨어 버렸을 때).
-    func reinstall(position: CGFloat?) {
-        guard item != nil else { return }
-        let old = name
-        uninstall()
-        defaults.removeObject(forKey: positionKey(old))
-        defaults.set(defaults.integer(forKey: generationKey) + 1, forKey: generationKey)
-        install(position: position)
-    }
-
     private func setLength(_ width: CGFloat) {
         guard let item, width > 0 else { return }
         let length = ceil(width)

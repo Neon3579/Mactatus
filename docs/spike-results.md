@@ -152,6 +152,8 @@
 - macOS는 이름별 자리를 따로(MenuBarAgent 보호 폴더) 기억해서, ⌘-끌기로 옮긴 자리가 다음 실행에도 유지된다. 다시 켜진 다른 앱 아이콘은 그 앱이 기억하는 예전 자리로 돌아온다
 - SwiftUI `MenuBarExtra`는 이름을 정할 수 없어(Item-0, Item-1) → AI·시스템 아이콘은 `NSStatusItem`을 직접 만든다(`App/UI/StatusItemHost.swift`). `openSettings`도 장면 밖에서는 안 되어 설정 창을 직접 띄운다
 - 우리 앱의 `NSStatusItem`은 `NSApp.windows`의 NSStatusBarWindow `statusItem` 값으로 찾을 수 있다(KVC). 이번에는 쓰지 않음
+- **"메뉴 막대에서 허용"(시스템 설정 → 메뉴 막대, 2026-10-16):** 앱을 끄면 아이콘이 메뉴바와 « 에서 모두 사라진다. 앱의 `AXExtrasMenuBar`에는 그대로 남아(« 자리 좌표) `AXPress`로 메뉴가 열린다(AlDente로 확인). 끈 아이콘과 « 에 숨은 아이콘은 속성(AXEnabled·AXSubrole 등)이 같아 구별할 수 없고, 끈 상태는 MenuBarAgent 보호 폴더에 있어 읽을 수 없다 → 서랍을 이 설정에 맡기는 방식으로 재설계
+- 상태 아이템 클릭 이벤트의 좌표는 실제 누른 곳이 아니라 버튼 가운데로 온다(⌄ 빈 공간 클릭 판단이 틀렸던 원인)
 
 ## 10. 편집 모드용 덮개 창 — 가능
 

@@ -175,7 +175,7 @@ private struct DrawerPane: View {
         Form {
             Section {
                 Toggle("메뉴바 서랍(⌄) 쓰기", isOn: $settings.drawerEnabled)
-                Text("⌄ 왼쪽에 있는 아이콘은 서랍에 들어가요. macOS 기본 « 버튼 안에도 함께 보여요(macOS 27에서는 아이콘을 숨길 곳이 « 밖에 없어요).")
+                Text("서랍에는 다른 앱의 메뉴바 아이콘이 모두 보이고, 누르면 원래 메뉴가 열려요.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("권한") {
@@ -187,9 +187,11 @@ private struct DrawerPane: View {
                     }
                 }
             }
-            Section("쓰는 법") {
-                Text("• 아이콘을 ⌘ 누른 채 ⌄ 왼쪽으로 끌면 서랍에 들어가요.\n• 서랍의 아이콘을 누르면 원래 메뉴가 열려요.\n• 서랍 아이콘을 우클릭 → \"메뉴바로 꺼내기\". 메뉴바에 자리가 없으면 꺼낼 수 없어요.")
+            Section("메뉴바에서 아이콘 숨기기") {
+                Text("시스템 설정 → 메뉴 막대 → \"메뉴 막대에서 허용\"에서 앱을 끄면 그 아이콘이 메뉴바와 « 에서 사라져요. 앱은 계속 실행되고, 서랍에서 눌러 열 수 있어요. Wi-Fi·Spotlight 같은 Apple 기능은 같은 화면 위쪽에서 \"메뉴 막대에서 보지 않음\"으로 바꿔요.")
                     .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("메뉴 막대 설정 열기…") { NSWorkspace.shared.open(DrawerController.menuBarSettingsURL) }
             }
         }
         .formStyle(.grouped)

@@ -39,16 +39,6 @@ func extrasElements(pid: pid_t) -> [AXUIElement] {
     return axValue(bar as! AXUIElement, kAXChildrenAttribute) as? [AXUIElement] ?? []
 }
 
-/// 앞에 있는 앱의 메뉴(파일·편집…)가 끝나는 x.
-func frontmostMenuMaxX() -> CGFloat? {
-    guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
-    let element = AXUIElementCreateApplication(app.processIdentifier)
-    AXUIElementSetMessagingTimeout(element, 0.5)
-    guard let bar = axValue(element, kAXMenuBarAttribute) else { return nil }
-    let menus = axValue(bar as! AXUIElement, kAXChildrenAttribute) as? [AXUIElement] ?? []
-    return menus.compactMap(axFrame).filter { $0.width > 0 }.map(\.maxX).max()
-}
-
 // MARK: - 훑기
 
 /// 메인 스레드 밖에서 모든 앱의 메뉴바 아이콘을 읽는다.
@@ -108,7 +98,7 @@ actor MenuBarScanner {
                         isOwn: item.isOwn, isSystem: item.isSystem)
         }
         .sorted { $0.frame.minX < $1.frame.minX }
-        return MenuBarScan(items: items, chevron: chevron, toggle: toggle, date: now, menuMaxX: frontmostMenuMaxX())
+        return MenuBarScan(items: items, chevron: chevron, toggle: toggle, date: now)
     }
 
     /// 다른 앱의 아이콘을 누른다(그 앱의 메뉴·창이 원래 자리에 열린다). 숨겨져 있어도 된다.

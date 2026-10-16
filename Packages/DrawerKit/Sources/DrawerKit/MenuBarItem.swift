@@ -61,8 +61,6 @@ public struct MenuBarScan: Sendable, Equatable {
     /// 우리 ⌄ 버튼(왼쪽 빈 공간 포함)
     public var toggle: CGRect?
     public var date: Date
-    /// 앞에 있는 앱의 메뉴(파일·편집…)가 끝나는 x. 노치 왼쪽에 남는 자리를 셀 때 쓴다
-    public var menuMaxX: CGFloat? = nil
 
     /// ⌄ 버튼이 « 안으로 숨겨졌는지(보이는 아이콘이 너무 많을 때)
     public var toggleHidden: Bool {
