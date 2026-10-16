@@ -42,10 +42,10 @@ struct NotchRootView: View {
             if let module = controller.compactModule {
                 HStack(spacing: 0) {
                     module.compactLeading()
-                        .frame(width: NotchController.wing, height: notch.height)
+                        .frame(width: module.compactWingWidth, height: notch.height)
                     Color.clear.frame(width: notch.width)
                     module.compactTrailing()
-                        .frame(width: NotchController.wing, height: notch.height)
+                        .frame(width: module.compactWingWidth, height: notch.height)
                 }
             }
         case .expanded:
@@ -72,7 +72,7 @@ struct NotchRootView: View {
     private func header(notchWidth: CGFloat) -> some View {
         HStack(spacing: 0) {
             HStack(spacing: 4) {
-                ForEach(controller.modules, id: \.id) { module in
+                ForEach(controller.modules.filter(\.showsTab), id: \.id) { module in
                     let selected = module.id == controller.selectedModule?.id
                     Button {
                         controller.select(module)

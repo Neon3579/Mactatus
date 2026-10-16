@@ -121,6 +121,24 @@ public final class DrawerController {
         }
     }
 
+    /// Apple 구성 요소(입력 소스·Spotlight·날씨 등)는 종료 메뉴를 보이지 않는다.
+    public func canQuit(_ item: MenuBarItem) -> Bool {
+        !(item.bundleID?.hasPrefix("com.apple.") ?? true)
+    }
+
+    /// 그 앱에 종료를 요청한다(메뉴바 아이콘 우클릭의 "종료"와 같음). 서랍 목록은 다음 훑기 때 갱신된다.
+    public func quit(_ item: MenuBarItem) {
+        guard canQuit(item), let app = NSRunningApplication(processIdentifier: item.pid) else { return }
+        if !app.terminate() { notice = "\(item.appName)을(를) 종료하지 못했어요." }
+    }
+
+    /// 그 앱을 Finder에서 보여준다.
+    public func revealInFinder(_ item: MenuBarItem) {
+        guard let url = NSRunningApplication(processIdentifier: item.pid)?.bundleURL else { return }
+        closePanel()
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
     /// 시스템 설정 → 메뉴 막대를 연다. 아이콘을 메뉴바에서 숨기거나 다시 보이게 하는 곳.
     public func openMenuBarSettings() {
         closePanel()

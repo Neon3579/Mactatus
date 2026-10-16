@@ -20,6 +20,10 @@
 	<string>ko</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>블루투스 기기가 연결되거나 끊길 때 노치에 알리고 배터리를 보여주려면 필요해요.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>다운로드가 끝난 파일을 노치에 보여주고 열거나 옮기려면 필요해요.</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>LSApplicationCategoryType</key>

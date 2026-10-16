@@ -34,6 +34,10 @@ public final class AppSettings {
         static let drawerEnabled = "drawer.enabled"
         static let notchEnabled = "notch.enabled"
         static let mediaEnabled = "notch.media.enabled"
+        static let bluetoothEnabled = "notch.bluetooth.enabled"
+        static let downloadsEnabled = "notch.downloads.enabled"
+        static let statusEnabled = "notch.status.enabled"
+        static let statusVolumeEnabled = "notch.status.volume"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -63,6 +67,14 @@ public final class AppSettings {
     public var notchEnabled: Bool { didSet { defaults.set(notchEnabled, forKey: Key.notchEnabled) } }
     /// 노치에 지금 재생 중인 음악을 보일지.
     public var mediaEnabled: Bool { didSet { defaults.set(mediaEnabled, forKey: Key.mediaEnabled) } }
+    /// 블루투스 기기 연결·끊김 알림
+    public var bluetoothEnabled: Bool { didSet { defaults.set(bluetoothEnabled, forKey: Key.bluetoothEnabled) } }
+    /// 다운로드 진행·완료
+    public var downloadsEnabled: Bool { didSet { defaults.set(downloadsEnabled, forKey: Key.downloadsEnabled) } }
+    /// 상태 팝업(충전·저전력·Caps Lock)
+    public var statusEnabled: Bool { didSet { defaults.set(statusEnabled, forKey: Key.statusEnabled) } }
+    /// 볼륨 팝업(macOS 기본 볼륨 팝업도 함께 떠서 기본은 끔)
+    public var statusVolumeEnabled: Bool { didSet { defaults.set(statusVolumeEnabled, forKey: Key.statusVolumeEnabled) } }
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -83,6 +95,10 @@ public final class AppSettings {
             Key.drawerEnabled: true,
             Key.notchEnabled: true,
             Key.mediaEnabled: true,
+            Key.bluetoothEnabled: true,
+            Key.downloadsEnabled: true,
+            Key.statusEnabled: true,
+            Key.statusVolumeEnabled: false,
         ])
         refreshMinutes = defaults.integer(forKey: Key.refreshMinutes)
         alertsEnabled = defaults.bool(forKey: Key.alertsEnabled)
@@ -99,5 +115,9 @@ public final class AppSettings {
         drawerEnabled = defaults.bool(forKey: Key.drawerEnabled)
         notchEnabled = defaults.bool(forKey: Key.notchEnabled)
         mediaEnabled = defaults.bool(forKey: Key.mediaEnabled)
+        bluetoothEnabled = defaults.bool(forKey: Key.bluetoothEnabled)
+        downloadsEnabled = defaults.bool(forKey: Key.downloadsEnabled)
+        statusEnabled = defaults.bool(forKey: Key.statusEnabled)
+        statusVolumeEnabled = defaults.bool(forKey: Key.statusVolumeEnabled)
     }
 }

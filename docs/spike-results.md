@@ -109,6 +109,19 @@
 - 비공개 배터리 속성: `batteryPercentLeft`·`Right`·`Case`가 읽힘(100/100/100 → 테스트 중 왼쪽 0으로 바뀜)
 - 1분 동안 연결이 끊기거나 새로 연결되는 일은 기록되지 않아 그 순간의 알림은 미확인 → 5단계에서 확인
 - `system_profiler SPBluetoothDataType -json`은 연결이 끊긴 기기의 마지막 배터리 값도 보여줌(보조 수단)
+- **5단계(2026-10-16):** 연결·끊김 알림은 메인이 아니라 IOBluetooth 내부 큐(`com.apple.bluetooth.iobluetooth.coordinatorQueue`)에서 온다. 받는 쪽을 메인 액터로 표시하면 Swift 격리 검사로 앱이 멈춘다 → 받자마자 메인으로 넘긴다. AirPods 연결 알림 정상 확인
+
+## 6-1. 다운로드 진행률 — 가능(5단계, 2026-10-16)
+
+- 다운로드 폴더에 `Progress.addSubscriber(forFileURL:)`로 구독하면 Safari·Chrome이 Finder용으로 공개하는 `NSProgress`를 받는다
+- **받은 Progress의 `fileURL` 속성은 비어 있다.** 파일 경로는 `userInfo[.fileURLKey]`에만 있다(`fileURL`만 읽어 모든 다운로드를 버리던 버그의 원인)
+- 끝날 때(unpublish) 취소가 아니고 진행률이 끝까지 갔으면 다 받은 것으로 본다(다운로드 폴더 권한 없이도 판단 가능)
+- 시험: 브라우저 없이 `Progress(kind: .file, fileURL:)`를 `publish()`하는 작은 프로그램으로 확인
+
+## 6-2. Caps Lock 알림 — 가능(5단계, 2026-10-16)
+
+- Caps Lock 키로 한/영을 바꾸도록 설정하면, 짧게 눌러 입력 소스만 바꿀 때도 `flagsChanged` 이벤트에 Caps Lock이 켜진 것처럼 온다
+- 0.2초 뒤 실제 상태(`NSEvent.modifierFlags`)를 읽고, 입력 소스 변경 알림(`com.apple.Carbon.TISNotifySelectedKeyboardInputSourceChanged`, 분산 알림)이 오면 한/영 전환으로 보고 띄우지 않거나 지운다(사용자 확인)
 
 ## 7. 메뉴바 아이콘 목록·캡처 — 가능(방식 변경)
 

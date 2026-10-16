@@ -84,6 +84,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     notch.modules = [media]
                     DebugSnapshot.write(notch.previewView(expanded: expanded), to: directory, name: name, width: 548)
                 }
+                let airpods = BluetoothDeviceInfo(id: "preview", name: "AirPods Pro", symbol: "airpodspro",
+                                                  battery: BatteryLevels(left: 85, right: 80, caseLevel: 60))
+                let events: [(String, @MainActor (NotchController) -> Void)] = [
+                    ("notch-bluetooth", { notch in let bt = BluetoothModule(); bt.showPreview(airpods, isConnected: true); notch.modules = [bt] }),
+                    ("notch-bluetooth-long", { notch in let bt = BluetoothModule()
+                        bt.showPreview(BluetoothDeviceInfo(id: "long", name: "홍길동의 AirPods Pro", symbol: "airpodspro", battery: BatteryLevels()), isConnected: true)
+                        notch.modules = [bt] }),
+                    ("notch-download", { notch in let dl = DownloadsModule()
+                        dl.showPreview(active: [DownloadItem(id: "a", name: "Xcode.xip", fraction: 0.42, secondsRemaining: 150)], recent: [], finished: nil)
+                        notch.modules = [dl] }),
+                    ("notch-charging", { notch in let st = StatusModule(); st.showPreview(.charging(percent: 80)); notch.modules = [st] }),
+                ]
+                for (name, setup) in events {
+                    let notch = NotchController()
+                    setup(notch)
+                    DebugSnapshot.write(notch.previewView(expanded: false), to: directory, name: name, width: 548)
+                }
+                let btExpanded = NotchController()
+                let bt = BluetoothModule()
+                bt.showPreview(airpods, isConnected: true)
+                btExpanded.modules = [bt]
+                DebugSnapshot.write(btExpanded.previewView(expanded: true), to: directory, name: "notch-bluetooth-expanded", width: 548)
                 DebugSnapshot.write(HStack(spacing: 16) {
                     ForEach(SystemLabelStyle.allCases, id: \.self) { style in
                         SystemMenuLabelPreview(store: self.metrics, style: style)

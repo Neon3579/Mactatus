@@ -13,6 +13,9 @@ struct DrawerView: View {
             notice: controller.notice,
             icon: { controller.icon(for: $0) },
             onOpen: { controller.open($0) },
+            canQuit: { controller.canQuit($0) },
+            onQuit: { controller.quit($0) },
+            onReveal: { controller.revealInFinder($0) },
             onOpenSettings: { controller.openMenuBarSettings() },
             onRequestPermission: { controller.requestAccessibility() })
     }
@@ -25,6 +28,9 @@ struct DrawerContent: View {
     let notice: String?
     let icon: (MenuBarItem) -> NSImage?
     let onOpen: (MenuBarItem) -> Void
+    var canQuit: (MenuBarItem) -> Bool = { _ in false }
+    var onQuit: (MenuBarItem) -> Void = { _ in }
+    var onReveal: (MenuBarItem) -> Void = { _ in }
     let onOpenSettings: () -> Void
     let onRequestPermission: () -> Void
 
@@ -90,6 +96,12 @@ struct DrawerContent: View {
                         .onTapGesture { onOpen(item) }
                         .contextMenu {
                             Button("열기") { onOpen(item) }
+                            Divider()
+                            if canQuit(item) {
+                                Button("\(item.appName) 종료") { onQuit(item) }
+                            }
+                            Button("Finder에서 보기") { onReveal(item) }
+                            Divider()
                             Button("메뉴바에서 숨기기·보이기…", action: onOpenSettings)
                         }
                 }

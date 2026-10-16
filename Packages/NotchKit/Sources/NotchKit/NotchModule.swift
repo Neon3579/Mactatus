@@ -14,6 +14,47 @@ public protocol NotchModule: AnyObject {
     func compactTrailing() -> AnyView
     /// 펼친 상태의 내용
     func expanded() -> AnyView
+    /// 미니 상태에서 노치 양옆 날개 하나의 폭(기본 36). 이름까지 보여주는 일시 알림은 넓게 쓴다
+    var compactWingWidth: CGFloat { get }
+    /// 펼친 화면에 탭으로 보일지(상태 팝업처럼 미니로만 쓰는 모듈은 false)
+    var showsTab: Bool { get }
+}
+
+public extension NotchModule {
+    var compactWingWidth: CGFloat { 36 }
+    var showsTab: Bool { true }
+}
+
+/// 몇 초 동안만 보이는 미니 알림(연결됨·충전 중·다운로드 완료 등). 새 알림이 오면 시간을 다시 잰다.
+@MainActor
+@Observable
+public final class NotchFlash<Value: Equatable & Sendable> {
+    public private(set) var value: Value?
+    @ObservationIgnored private var task: Task<Void, Never>?
+
+    public init() {}
+
+    public func show(_ value: Value, for duration: Duration = .seconds(3)) {
+        self.value = value
+        task?.cancel()
+        task = Task { [weak self] in
+            try? await Task.sleep(for: duration)
+            guard !Task.isCancelled else { return }
+            self?.value = nil
+        }
+    }
+
+    /// 보이는 동안 내용만 바꾼다(시간은 그대로)
+    public func update(_ change: (inout Value) -> Void) {
+        guard var current = value else { return }
+        change(&current)
+        value = current
+    }
+
+    public func clear() {
+        task?.cancel()
+        value = nil
+    }
 }
 
 /// 여러 이벤트가 겹칠 때 우선순위: 일시 알림 > 다운로드 진행 > 음악 재생 > 기본 상태(계획서 4.4).

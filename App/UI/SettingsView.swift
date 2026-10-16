@@ -153,17 +153,28 @@ private struct NotchPane: View {
             }
             Section("모듈") {
                 Toggle("음악", isOn: $settings.mediaEnabled)
-                    .disabled(!settings.notchEnabled)
                 if !notch.media.isAvailable {
                     Label("음악 정보를 읽는 mediaremote-adapter가 앱 안에 없어요.", systemImage: "exclamationmark.triangle")
                         .font(.caption).foregroundStyle(.orange)
                 }
+                Toggle("다운로드 진행·완료", isOn: $settings.downloadsEnabled)
+                Toggle("블루투스 기기 연결·끊김", isOn: $settings.bluetoothEnabled)
+                Toggle("상태 팝업(충전·저전력 모드·Caps Lock)", isOn: $settings.statusEnabled)
+                Toggle("볼륨 팝업", isOn: $settings.statusVolumeEnabled)
+                    .disabled(!settings.statusEnabled)
+                Text("볼륨을 바꾸면 macOS 기본 볼륨 팝업도 함께 떠요.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
+            .disabled(!settings.notchEnabled)
         }
         .formStyle(.grouped)
         .navigationTitle("노치 허브")
         .onChange(of: settings.notchEnabled) { notch.apply() }
         .onChange(of: settings.mediaEnabled) { notch.apply() }
+        .onChange(of: settings.downloadsEnabled) { notch.apply() }
+        .onChange(of: settings.bluetoothEnabled) { notch.apply() }
+        .onChange(of: settings.statusEnabled) { notch.apply() }
+        .onChange(of: settings.statusVolumeEnabled) { notch.apply() }
     }
 }
 

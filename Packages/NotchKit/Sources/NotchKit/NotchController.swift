@@ -51,7 +51,9 @@ public final class NotchController {
     }
 
     public var selectedModule: NotchModule? {
-        modules.first { $0.id == selectedModuleID } ?? compactModule ?? modules.first
+        modules.first { $0.id == selectedModuleID }
+            ?? compactModule.flatMap { $0.showsTab ? $0 : nil }
+            ?? modules.first { $0.showsTab }
     }
 
     /// 지금 상태의 모양 크기(위쪽 양 끝의 휘어짐 포함)
@@ -62,7 +64,9 @@ public final class NotchController {
         let notch = geometry.notch.size
         switch state {
         case .idle: return CGSize(width: notch.width + Self.topRadius * 2, height: notch.height)
-        case .compact: return CGSize(width: notch.width + (Self.wing + Self.topRadius) * 2, height: notch.height)
+        case .compact:
+            let wing = compactModule?.compactWingWidth ?? Self.wing
+            return CGSize(width: notch.width + (wing + Self.topRadius) * 2, height: notch.height)
         case .expanded: return CGSize(width: max(Self.expandedSize.width, notch.width + 200), height: Self.expandedSize.height)
         }
     }
