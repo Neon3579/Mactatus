@@ -138,6 +138,7 @@ struct MediaExpandedView: View {
                 }
                 .buttonStyle(.plain)
                 .help("\(appName(now.appBundleID) ?? "재생 중인 앱") 열기")
+                .accessibilityLabel("\(appName(now.appBundleID) ?? "재생 중인 앱") 열기")
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(now.title)

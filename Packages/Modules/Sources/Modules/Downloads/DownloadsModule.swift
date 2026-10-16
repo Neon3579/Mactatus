@@ -286,6 +286,7 @@ struct DownloadsExpandedView: View {
                             Spacer()
                             Button { module.reveal(url) } label: { Image(systemName: "magnifyingglass") }
                                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Finder에서 보기")
+                                .accessibilityLabel("Finder에서 보기")
                         }
                         .contentShape(Rectangle())
                         .onTapGesture { module.open(url) }

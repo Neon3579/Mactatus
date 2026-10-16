@@ -3,6 +3,7 @@ import SwiftUI
 /// 노치 창의 내용: 상태에 맞는 크기의 검은 모양과 그 안의 모듈 내용.
 struct NotchRootView: View {
     let controller: NotchController
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let state = controller.state
@@ -28,7 +29,8 @@ struct NotchRootView: View {
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.spring(response: 0.36, dampingFraction: 0.82), value: state)
+        // 동작 줄이기를 켜면 튕기는 움직임 없이 짧게 바뀐다
+        .animation(reduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.36, dampingFraction: 0.82), value: state)
         .environment(\.colorScheme, .dark)
     }
 

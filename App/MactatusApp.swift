@@ -31,8 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var systemItem: StatusItemHost?
 
     private lazy var settingsWindow = SettingsWindow { [unowned self] in
-        AnyView(SettingsView(settings: settings, usage: usage, metrics: metrics, drawer: drawer, notch: notch, loginItem: loginItem))
+        AnyView(SettingsView(settings: settings, usage: usage, metrics: metrics, drawer: drawer, notch: notch, loginItem: loginItem,
+                             onShowOnboarding: { [unowned self] in onboarding.show() }))
     }
+    private lazy var onboarding = OnboardingWindow(drawer: drawer, loginItem: loginItem)
 
     lazy var usage: UsageStore = {
         let settings = settings
@@ -145,6 +147,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { await installStatusItems() }
         notch.controller.onOpenSettings = { [unowned self] in openSettings() }
         notch.apply()
+        if OnboardingWindow.needsShowing { onboarding.show() }
+        Log.app.info("로그인할 때 자동 실행: \(self.loginItem.isEnabled ? "켜짐" : "꺼짐", privacy: .public)")
         // 잠자기에서 깨면 네트워크가 붙을 때까지 잠깐 기다렸다 다시 조회
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in

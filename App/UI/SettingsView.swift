@@ -12,6 +12,7 @@ struct SettingsView: View {
     let drawer: DrawerController
     let notch: NotchHub
     let loginItem: LoginItem
+    var onShowOnboarding: () -> Void = {}
 
     enum Pane: String, CaseIterable, Identifiable {
         case general = "일반"
@@ -42,7 +43,7 @@ struct SettingsView: View {
             .navigationSplitViewColumnWidth(180)
         } detail: {
             switch selection {
-            case .general: GeneralPane(loginItem: loginItem)
+            case .general: GeneralPane(loginItem: loginItem, onShowOnboarding: onShowOnboarding)
             case .usage: UsagePane(settings: settings, usage: usage)
             case .system: SystemPane(settings: settings)
             case .drawer: DrawerPane(settings: settings, drawer: drawer)
@@ -55,6 +56,7 @@ struct SettingsView: View {
 
 private struct GeneralPane: View {
     let loginItem: LoginItem
+    let onShowOnboarding: () -> Void
 
     var body: some View {
         Form {
@@ -63,6 +65,9 @@ private struct GeneralPane: View {
                 if let message = loginItem.message {
                     Text(message).font(.caption).foregroundStyle(.secondary)
                 }
+            }
+            Section {
+                Button("처음 안내 다시 보기…", action: onShowOnboarding)
             }
             Section {
                 LabeledContent("버전", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "개발 빌드")
