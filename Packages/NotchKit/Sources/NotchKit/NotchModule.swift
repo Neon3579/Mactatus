@@ -18,11 +18,14 @@ public protocol NotchModule: AnyObject {
     var compactWingWidth: CGFloat { get }
     /// 펼친 화면에 탭으로 보일지(상태 팝업처럼 미니로만 쓰는 모듈은 false)
     var showsTab: Bool { get }
+    /// 파일을 끌고 노치에 다가오면 이 모듈 탭으로 펼친다(파일 트레이)
+    var acceptsFileDrops: Bool { get }
 }
 
 public extension NotchModule {
     var compactWingWidth: CGFloat { 36 }
     var showsTab: Bool { true }
+    var acceptsFileDrops: Bool { false }
 }
 
 /// 몇 초 동안만 보이는 미니 알림(연결됨·충전 중·다운로드 완료 등). 새 알림이 오면 시간을 다시 잰다.

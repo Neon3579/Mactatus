@@ -82,7 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     media.showPreview(playing)
                     let notch = NotchController()
                     notch.modules = [media]
-                    DebugSnapshot.write(notch.previewView(expanded: expanded), to: directory, name: name, width: 548)
+                    DebugSnapshot.write(notch.previewView(expanded: expanded), to: directory, name: name, width: 588)
                 }
                 let airpods = BluetoothDeviceInfo(id: "preview", name: "AirPods Pro", symbol: "airpodspro",
                                                   battery: BatteryLevels(left: 85, right: 80, caseLevel: 60))
@@ -99,13 +99,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 for (name, setup) in events {
                     let notch = NotchController()
                     setup(notch)
-                    DebugSnapshot.write(notch.previewView(expanded: false), to: directory, name: name, width: 548)
+                    DebugSnapshot.write(notch.previewView(expanded: false), to: directory, name: name, width: 588)
+                }
+                // 6단계: 파일 트레이·스크린샷·클립보드 펼친 화면(예시 파일은 시스템 앱)
+                let sampleFiles = ["/System/Applications/Notes.app", "/System/Applications/Preview.app", "/System/Applications/Safari.app"]
+                    .map { URL(fileURLWithPath: $0) }
+                let fileSnapshots: [(String, @MainActor (NotchController) -> Void)] = [
+                    ("notch-tray", { notch in let tray = FileTrayModule(); tray.showPreview(sampleFiles, flashCount: nil); notch.modules = [tray] }),
+                    ("notch-screenshot", { notch in let shot = ScreenshotModule(); shot.showPreview(sampleFiles, flashing: nil); notch.modules = [shot] }),
+                    ("notch-clipboard", { notch in let clip = ClipboardModule()
+                        clip.showPreview([ClipboardItem(content: .text("회의는 내일 오후 3시"), isPinned: true),
+                                          ClipboardItem(content: .text("https://example.com/report")),
+                                          ClipboardItem(content: .files(["/System/Applications/Notes.app"]))])
+                        notch.modules = [clip] }),
+                ]
+                for (name, setup) in fileSnapshots {
+                    let notch = NotchController()
+                    setup(notch)
+                    DebugSnapshot.write(notch.previewView(expanded: true), to: directory, name: name, width: 588)
                 }
                 let btExpanded = NotchController()
                 let bt = BluetoothModule()
                 bt.showPreview(airpods, isConnected: true)
                 btExpanded.modules = [bt]
-                DebugSnapshot.write(btExpanded.previewView(expanded: true), to: directory, name: "notch-bluetooth-expanded", width: 548)
+                DebugSnapshot.write(btExpanded.previewView(expanded: true), to: directory, name: "notch-bluetooth-expanded", width: 588)
                 DebugSnapshot.write(HStack(spacing: 16) {
                     ForEach(SystemLabelStyle.allCases, id: \.self) { style in
                         SystemMenuLabelPreview(store: self.metrics, style: style)

@@ -164,6 +164,35 @@ private struct NotchPane: View {
                     .disabled(!settings.statusEnabled)
                 Text("볼륨을 바꾸면 macOS 기본 볼륨 팝업도 함께 떠요.")
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle("새 스크린샷 알림", isOn: $settings.screenshotEnabled)
+            }
+            .disabled(!settings.notchEnabled)
+            Section("파일 트레이") {
+                Toggle("파일 트레이 쓰기", isOn: $settings.trayEnabled)
+                Toggle("원본 대신 복사본 보관", isOn: $settings.trayKeepsCopies)
+                Picker("자동으로 비우기", selection: $settings.trayClearHours) {
+                    Text("1시간 뒤").tag(1)
+                    Text("하루 뒤").tag(24)
+                    Text("일주일 뒤").tag(168)
+                    Text("비우지 않음").tag(0)
+                }
+                Text("파일을 끌어 노치에 가져가면 트레이가 펼쳐져요. 복사본을 보관하면 원본을 옮기거나 지워도 남아요.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .disabled(!settings.notchEnabled)
+            Section("클립보드 기록") {
+                Toggle("클립보드 기록 쓰기", isOn: $settings.clipboardEnabled)
+                Toggle("⌘⇧V로 기록 창 열기", isOn: $settings.clipboardHotkeyEnabled)
+                    .disabled(!settings.clipboardEnabled)
+                Picker("남길 개수", selection: $settings.clipboardLimit) {
+                    Text("20개").tag(20)
+                    Text("50개").tag(50)
+                    Text("100개").tag(100)
+                }
+                .disabled(!settings.clipboardEnabled)
+                Text("복사한 글·이미지·파일과 클립보드로 찍은 스크린샷, 파일로 저장된 새 스크린샷을 기록해요. 이 맥에만 저장되고, 비밀번호 관리자가 표시한 내용은 남기지 않아요. 켜면 macOS가 다른 앱에서 붙여넣기를 허용할지 물을 수 있어요. ⌘⇧V 창에서 고르면 바로 붙여넣어요(손쉬운 사용 권한 필요).")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .disabled(!settings.notchEnabled)
         }
@@ -175,6 +204,13 @@ private struct NotchPane: View {
         .onChange(of: settings.bluetoothEnabled) { notch.apply() }
         .onChange(of: settings.statusEnabled) { notch.apply() }
         .onChange(of: settings.statusVolumeEnabled) { notch.apply() }
+        .onChange(of: settings.trayEnabled) { notch.apply() }
+        .onChange(of: settings.trayKeepsCopies) { notch.apply() }
+        .onChange(of: settings.trayClearHours) { notch.apply() }
+        .onChange(of: settings.screenshotEnabled) { notch.apply() }
+        .onChange(of: settings.clipboardEnabled) { notch.apply() }
+        .onChange(of: settings.clipboardLimit) { notch.apply() }
+        .onChange(of: settings.clipboardHotkeyEnabled) { notch.apply() }
     }
 }
 

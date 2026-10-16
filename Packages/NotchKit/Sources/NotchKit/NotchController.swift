@@ -25,7 +25,7 @@ public final class NotchController {
 
     /// 미니 상태에서 노치 양옆으로 나오는 폭
     static let wing: CGFloat = 36
-    static let expandedSize = CGSize(width: 500, height: 178)
+    static let expandedSize = CGSize(width: 540, height: 178)
     static let topRadius: CGFloat = 6
     /// 창 가장자리 여유(그림자)
     static let margin: CGFloat = 24
@@ -37,6 +37,9 @@ public final class NotchController {
     @ObservationIgnored private var collapseTask: Task<Void, Never>?
     @ObservationIgnored private var mouseInside = false
     @ObservationIgnored private var trackTask: Task<Void, Never>?
+    /// 파일을 끌고 있는 중인지(끌기용 클립보드가 이번 누름 뒤에 바뀌었고 파일이 들어 있음)
+    @ObservationIgnored private var fileDragActive = false
+    @ObservationIgnored private var dragChangeCount = 0
 
     public init() {}
 
@@ -178,12 +181,17 @@ public final class NotchController {
             MainActor.assumeIsolated { self?.updateMouse() }
             return event
         } as Any)
-        // 펼친 채로 다른 곳을 누르면 접는다
+        // 펼친 채로 다른 곳을 누르면 접는다. 누를 때마다 끌기용 클립보드 번호를 기억해, 이번 끌기가 파일인지 가린다
         monitors.append(NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, self.isExpanded else { return }
-                self.collapse()
+                guard let self else { return }
+                self.dragChangeCount = NSPasteboard(name: .drag).changeCount
+                self.fileDragActive = false
+                if self.isExpanded { self.collapse() }
             }
+        } as Any)
+        monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .leftMouseUp) { [weak self] _ in
+            MainActor.assumeIsolated { self?.fileDragActive = false }
         } as Any)
     }
 
@@ -192,8 +200,16 @@ public final class NotchController {
     private func updateMouse() {
         guard let geometry, let panel else { return }
         let point = NSEvent.mouseLocation
-        let inside = geometry.shapeFrame(shapeSize).contains(point)
+        checkFileDrag()
+        // 파일을 끌고 올 때는 노치 둘레를 조금 넓게 잡아 맞추기 쉽게 한다
+        let zone = fileDragActive && !isExpanded ? geometry.shapeFrame(shapeSize).insetBy(dx: -40, dy: -24) : geometry.shapeFrame(shapeSize)
+        let inside = zone.contains(point)
         panel.ignoresMouseEvents = !inside
+        if inside, fileDragActive, let dropModule = modules.first(where: \.acceptsFileDrops) {
+            // 파일을 끌고 다가오면 기다리지 않고 바로 트레이로 펼친다(그래야 그대로 놓을 수 있다)
+            selectedModuleID = dropModule.id
+            if !isExpanded { expand() }
+        }
         guard inside != mouseInside else { return }
         mouseInside = inside
         if inside {
@@ -215,6 +231,13 @@ public final class NotchController {
                 self.collapse()
             }
         }
+    }
+
+    private func checkFileDrag() {
+        guard !fileDragActive, NSEvent.pressedMouseButtons & 1 != 0 else { return }
+        let pasteboard = NSPasteboard(name: .drag)
+        guard pasteboard.changeCount != dragChangeCount else { return }
+        fileDragActive = pasteboard.types?.contains(.fileURL) ?? false
     }
 
     /// 마우스가 모양 위에 있거나 펼쳐져 있는 동안 위치를 직접 확인한다.

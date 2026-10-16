@@ -38,6 +38,13 @@ public final class AppSettings {
         static let downloadsEnabled = "notch.downloads.enabled"
         static let statusEnabled = "notch.status.enabled"
         static let statusVolumeEnabled = "notch.status.volume"
+        static let trayEnabled = "notch.tray.enabled"
+        static let trayKeepsCopies = "notch.tray.keepsCopies"
+        static let trayClearHours = "notch.tray.clearHours"
+        static let screenshotEnabled = "notch.screenshot.enabled"
+        static let clipboardEnabled = "notch.clipboard.enabled"
+        static let clipboardLimit = "notch.clipboard.limit"
+        static let clipboardHotkey = "notch.clipboard.hotkey"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -75,6 +82,20 @@ public final class AppSettings {
     public var statusEnabled: Bool { didSet { defaults.set(statusEnabled, forKey: Key.statusEnabled) } }
     /// 볼륨 팝업(macOS 기본 볼륨 팝업도 함께 떠서 기본은 끔)
     public var statusVolumeEnabled: Bool { didSet { defaults.set(statusVolumeEnabled, forKey: Key.statusVolumeEnabled) } }
+    /// 파일 트레이
+    public var trayEnabled: Bool { didSet { defaults.set(trayEnabled, forKey: Key.trayEnabled) } }
+    /// 원본 대신 복사본을 보관할지
+    public var trayKeepsCopies: Bool { didSet { defaults.set(trayKeepsCopies, forKey: Key.trayKeepsCopies) } }
+    /// 담은 지 이 시간이 지나면 트레이에서 뺀다(0이면 안 뺌)
+    public var trayClearHours: Int { didSet { defaults.set(trayClearHours, forKey: Key.trayClearHours) } }
+    /// 새 스크린샷 알림
+    public var screenshotEnabled: Bool { didSet { defaults.set(screenshotEnabled, forKey: Key.screenshotEnabled) } }
+    /// 클립보드 기록(복사한 글·이미지·파일과 새 스크린샷). 켜면 macOS가 붙여넣기 허용을 물을 수 있다
+    public var clipboardEnabled: Bool { didSet { defaults.set(clipboardEnabled, forKey: Key.clipboardEnabled) } }
+    /// 고정하지 않은 기록을 몇 개까지 남길지
+    public var clipboardLimit: Int { didSet { defaults.set(clipboardLimit, forKey: Key.clipboardLimit) } }
+    /// ⌘⇧V로 기록 창 열기
+    public var clipboardHotkeyEnabled: Bool { didSet { defaults.set(clipboardHotkeyEnabled, forKey: Key.clipboardHotkey) } }
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -99,6 +120,13 @@ public final class AppSettings {
             Key.downloadsEnabled: true,
             Key.statusEnabled: true,
             Key.statusVolumeEnabled: false,
+            Key.trayEnabled: true,
+            Key.trayKeepsCopies: false,
+            Key.trayClearHours: 24,
+            Key.screenshotEnabled: true,
+            Key.clipboardEnabled: true,
+            Key.clipboardLimit: 50,
+            Key.clipboardHotkey: true,
         ])
         refreshMinutes = defaults.integer(forKey: Key.refreshMinutes)
         alertsEnabled = defaults.bool(forKey: Key.alertsEnabled)
@@ -119,5 +147,12 @@ public final class AppSettings {
         downloadsEnabled = defaults.bool(forKey: Key.downloadsEnabled)
         statusEnabled = defaults.bool(forKey: Key.statusEnabled)
         statusVolumeEnabled = defaults.bool(forKey: Key.statusVolumeEnabled)
+        trayEnabled = defaults.bool(forKey: Key.trayEnabled)
+        trayKeepsCopies = defaults.bool(forKey: Key.trayKeepsCopies)
+        trayClearHours = defaults.integer(forKey: Key.trayClearHours)
+        screenshotEnabled = defaults.bool(forKey: Key.screenshotEnabled)
+        clipboardEnabled = defaults.bool(forKey: Key.clipboardEnabled)
+        clipboardLimit = defaults.integer(forKey: Key.clipboardLimit)
+        clipboardHotkeyEnabled = defaults.bool(forKey: Key.clipboardHotkey)
     }
 }

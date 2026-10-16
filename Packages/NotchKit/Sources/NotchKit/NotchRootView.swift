@@ -71,7 +71,7 @@ struct NotchRootView: View {
     /// 펼친 화면 맨 윗줄: 노치 왼쪽에 탭, 오른쪽에 설정
     private func header(notchWidth: CGFloat) -> some View {
         HStack(spacing: 0) {
-            HStack(spacing: 4) {
+            HStack(spacing: 2) {
                 ForEach(controller.modules.filter(\.showsTab), id: \.id) { module in
                     let selected = module.id == controller.selectedModule?.id
                     Button {
@@ -79,7 +79,7 @@ struct NotchRootView: View {
                     } label: {
                         Image(systemName: module.symbol)
                             .font(.system(size: 12, weight: .medium))
-                            .frame(width: 26, height: 22)
+                            .frame(width: 24, height: 22)
                             .background(selected ? AnyShapeStyle(.white.opacity(0.16)) : AnyShapeStyle(.clear), in: Capsule())
                     }
                     .buttonStyle(.plain)
